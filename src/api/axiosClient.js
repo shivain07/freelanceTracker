@@ -60,7 +60,9 @@ api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
-      if (!error.config?.skipAuthRedirect) {
+      if (error.config?.suppressAuthError) {
+        // An anonymous session check is expected to return 401.
+      } else if (!error.config?.skipAuthRedirect) {
         window.dispatchEvent(new CustomEvent('app:auth-expired'));
       } else {
         notifyUser(getErrorMessage(error));

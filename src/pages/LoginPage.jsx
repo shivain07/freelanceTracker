@@ -131,7 +131,11 @@ const LoginPage = () => {
         <div className="mt-10 flex flex-col items-center gap-3">
           <GoogleLogin
             onSuccess={handleLoginSuccess}
-            onError={() => notifyUser("Google sign-in could not be completed. Please try again.")}
+            onError={() =>
+              notifyUser(
+                "Google sign-in could not be completed. Please try again.",
+              )
+            }
             shape="circle"
             size="large"
           />
@@ -173,10 +177,20 @@ const LoginPage = () => {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-slate-900 py-8 px-6 text-center text-xs text-slate-500">
-        <p>
-          &copy; {new Date().getFullYear()} FreeLance Tracker. Built for
-          professionals.
-        </p>
+        <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-4">
+          <p>
+            &copy; {new Date().getFullYear()} FreeLance Tracker. Built for
+            professionals.
+          </p>
+          <a
+            href="https://www.linkedin.com/in/shivain-gusain-bab76020a/"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center text-indigo-400 transition-colors hover:text-indigo-300"
+          >
+            Contact on LinkedIn
+          </a>
+        </div>
       </footer>
     </div>
   );

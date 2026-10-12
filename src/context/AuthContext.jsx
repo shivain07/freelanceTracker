@@ -16,28 +16,24 @@ export const AuthProvider = ({ children }) => {
   const checkUserSession = async () => {
     try {
       setLoading(true);
-      const res = await api.get(API_ROUTES.auth.verify);
+      const res = await api.get(API_ROUTES.auth.verify, {
+        suppressAuthError: true,
+      });
       verifyUser(res || null);
     } catch (error) {
+      if (error.response?.status !== 401) {
+        console.error(
+          "Unable to verify the current session:",
+          error.response?.data || error.message,
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const verifyUser = useCallback((userData) => {
-    console.log(userData)
     if (userData?.user?.id) {
-      // userData = {
-      //   success: true,
-      //   message: "Authentication successful",
-      //   user: {
-      //     id: 1,
-      //     name: "Shivain Gusain",
-      //     email: "shivaingusain007@gmail.com",
-      //     picture:
-      //       "https://lh3.googleusercontent.com/a/ACg8ocJBbVWBpcjDZID1ncHSbl6xuokVJO19y9ja4zg3oc88fHoWHlmD=s96-c",
-      //   },
-      // };
       setUser(userData?.user);
       setAuthenticated(true);
     } else {
