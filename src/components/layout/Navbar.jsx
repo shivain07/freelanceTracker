@@ -8,8 +8,26 @@ import {
   X,
   User as UserIcon,
 } from "lucide-react";
+import api from "../../api/axiosClient";
 import { useAuth } from "../../context/AuthContext";
 import API_ROUTES from "../../api/apiRoutes";
+
+const UserAvatar = ({ avatarUrl, alt, imageClassName, fallbackClassName }) => {
+  const [failedUrl, setFailedUrl] = useState(null);
+
+  return avatarUrl && failedUrl !== avatarUrl ? (
+    <img
+      src={avatarUrl}
+      alt={alt}
+      className={imageClassName}
+      onError={() => setFailedUrl(avatarUrl)}
+    />
+  ) : (
+    <div className={fallbackClassName}>
+      <UserIcon className="w-4 h-4" />
+    </div>
+  );
+};
 
 const Navbar = () => {
   const { user, verifyUser } = useAuth();
@@ -20,7 +38,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       // 1. Tell backend to clear the HttpOnly cookie
-       await api.post(API_ROUTES.auth.logout, {}, { withCredentials: true });
+      await api.post(API_ROUTES.auth.logout, {}, { withCredentials: true });
 
       // 2. Clear user state from React context / local storage
       verifyUser(null);
@@ -74,17 +92,12 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-4">
             {user && (
               <div className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-full bg-slate-800/80 border border-slate-700/60">
-                {user.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt={user.display_name || user.name || "User"}
-                    className="w-8 h-8 rounded-full object-cover border border-slate-600"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 flex items-center justify-center">
-                    <UserIcon className="w-4 h-4" />
-                  </div>
-                )}
+                <UserAvatar
+                  avatarUrl={user.avatar_url}
+                  alt={user.display_name || user.name || "User"}
+                  imageClassName="w-8 h-8 rounded-full object-cover border border-slate-600"
+                  fallbackClassName="w-8 h-8 rounded-full bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 flex items-center justify-center"
+                />
                 <div className="text-left pr-2">
                   <div className="text-xs font-semibold text-white max-w-[140px] truncate">
                     {user.display_name || user.name || "Freelancer"}
@@ -144,17 +157,12 @@ const Navbar = () => {
 
           {user && (
             <div className="flex items-center gap-3 pt-3 border-t border-slate-800">
-              {user.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt={user.display_name || user.name || "User"}
-                  className="w-9 h-9 rounded-full object-cover border border-slate-600"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-indigo-600/30 text-indigo-300 flex items-center justify-center">
-                  <UserIcon className="w-4 h-4" />
-                </div>
-              )}
+              <UserAvatar
+                avatarUrl={user.avatar_url}
+                alt={user.display_name || user.name || "User"}
+                imageClassName="w-9 h-9 rounded-full object-cover border border-slate-600"
+                fallbackClassName="w-9 h-9 rounded-full bg-indigo-600/30 text-indigo-300 flex items-center justify-center"
+              />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-white truncate">
                   {user.display_name || user.name || "Freelancer"}

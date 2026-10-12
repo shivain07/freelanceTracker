@@ -8,8 +8,12 @@ import {
   Circle,
   Loader2,
   Calendar,
+  Trash2,
 } from 'lucide-react';
 import api from '../../api/axiosClient';
+import API_ROUTES from '../../api/apiRoutes';
+import ConfirmationDialog from '../common/ConfirmationDialog';
+import { notifyUser } from '../../utils/notifications';
 
 const TaskTree = ({ tasks = [], onTasksUpdated }) => {
   // Collapsed state map by taskId
@@ -29,6 +33,9 @@ const TaskTree = ({ tasks = [], onTasksUpdated }) => {
   // Toggling completion state
   const [updatingTaskId, setUpdatingTaskId] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [taskToDelete, setTaskToDelete] = useState(null);
+  const [isDeletingTask, setIsDeletingTask] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const toggleCollapse = (taskId) => {
     setCollapsedMap((prev) => ({
@@ -42,7 +49,7 @@ const TaskTree = ({ tasks = [], onTasksUpdated }) => {
       setUpdatingTaskId(task.id);
       setErrorMsg('');
       const newStatus = !task.is_completed;
-      await api.patch(`/api/tasks/${task.id}`, {
+      await api.patch(API_ROUTES.task.patchTask(task.id), {
         is_completed: newStatus,
       });
       if (onTasksUpdated) {
@@ -55,6 +62,33 @@ const TaskTree = ({ tasks = [], onTasksUpdated }) => {
     }
   };
 
+  const closeDeleteDialog = () => {
+    if (isDeletingTask) return;
+    setTaskToDelete(null);
+    setDeleteError('');
+  };
+
+  const handleDeleteTask = async () => {
+    if (!taskToDelete) return;
+
+    try {
+      setIsDeletingTask(true);
+      setDeleteError('');
+      await api.delete(API_ROUTES.task.deleteTask(taskToDelete.id));
+      setTaskToDelete(null);
+      notifyUser('Task deleted successfully.', 'success');
+      if (onTasksUpdated) {
+        await onTasksUpdated();
+      }
+    } catch (err) {
+      setDeleteError(
+        err.response?.data?.message || 'Failed to delete the task. Please try again.',
+      );
+    } finally {
+      setIsDeletingTask(false);
+    }
+  };
+
   const handleCreateSubtask = async (e, parentTask) => {
     e.preventDefault();
     if (!subtaskTitle.trim()) return;
@@ -62,7 +96,7 @@ const TaskTree = ({ tasks = [], onTasksUpdated }) => {
     try {
       setIsSubmittingSubtask(true);
       setErrorMsg('');
-      await api.post(`/api/tasks`, {
+      await api.post(API_ROUTES.task.createTask, {
         title: subtaskTitle.trim(),
         parent_task_id: parentTask.id,
         project_id: parentTask.project_id,
@@ -90,7 +124,7 @@ const TaskTree = ({ tasks = [], onTasksUpdated }) => {
     try {
       setIsSubmittingTime(true);
       setErrorMsg('');
-      await api.post(`/api/time-logs`, {
+      await api.post(API_ROUTES.timelog.newTime, {
         task_id: taskId,
         hours: hoursNum,
         description: logDescription.trim(),
@@ -260,6 +294,20 @@ const TaskTree = ({ tasks = [], onTasksUpdated }) => {
                     <Clock className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">Log Time</span>
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteError('');
+                      setTaskToDelete(task);
+                    }}
+                    aria-label={`Delete ${task.title}`}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-rose-600 rounded-lg transition-colors hover:bg-rose-50 hover:text-rose-700 cursor-pointer"
+                    title="Delete Task"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Delete</span>
+                  </button>
                 </div>
               </div>
 
@@ -353,6 +401,30 @@ const TaskTree = ({ tasks = [], onTasksUpdated }) => {
           );
         })}
       </div>
+      <ConfirmationDialog
+        isOpen={Boolean(taskToDelete)}
+        onClose={closeDeleteDialog}
+        onConfirm={handleDeleteTask}
+        title="Delete task?"
+        message={
+          <>
+            {deleteError && (
+              <p role="alert" className="mb-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-700">
+                {deleteError}
+              </p>
+            )}
+            <p>
+              Are you sure you want to delete{' '}
+              <strong className="font-semibold text-slate-800">
+                {taskToDelete?.title || 'this task'}
+              </strong>
+              ? This action cannot be undone.
+            </p>
+          </>
+        }
+        confirmText="Delete task"
+        isConfirming={isDeletingTask}
+      />
     </div>
   );
 };

@@ -6,6 +6,8 @@ import Modal from '../components/common/Modal';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import api from '../api/axiosClient';
 import { Plus, Users, FolderPlus, AlertCircle } from 'lucide-react';
+import API_ROUTES from '../api/apiRoutes';
+import { notifyUser } from '../utils/notifications';
 
 const DashboardPage = () => {
   const [projects, setProjects] = useState([]);
@@ -40,8 +42,8 @@ const DashboardPage = () => {
       setLoading(true);
       setError('');
       const [projectsRes, clientsRes] = await Promise.all([
-        api.get('/api/projects'),
-        api.get('/api/clients'),
+        api.get(API_ROUTES.project.getAllProjects),
+        api.get(API_ROUTES.client.getAllClients),
       ]);
 
       // Backend wraps responses in { success, data }
@@ -64,6 +66,14 @@ const DashboardPage = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleDeleteProject = async (projectId) => {
+    await api.delete(API_ROUTES.project.deleteProject(projectId));
+    setProjects((currentProjects) =>
+      currentProjects.filter((project) => String(project.id) !== String(projectId)),
+    );
+    notifyUser('Project deleted successfully.', 'success');
+  };
 
   // Compute stats
   const totalProjects = projects.length;
@@ -102,7 +112,7 @@ const DashboardPage = () => {
         hourly_rate: clientForm.hourly_rate ? parseFloat(clientForm.hourly_rate) : 0,
       };
 
-      const response = await api.post('/api/clients', payload);
+      const response = await api.post(API_ROUTES.client.addClient, payload);
       const createdClient = response.data.data || response.data.client || response.data;
       setClients((prev) => [...prev, createdClient]);
       setClientForm({ name: '', email: '', hourly_rate: '' });
@@ -137,7 +147,7 @@ const DashboardPage = () => {
         description: projectForm.description.trim() || undefined,
       };
 
-      await api.post('/api/projects', payload);
+      await api.post(API_ROUTES.project.addProject, payload);
       setProjectForm({ client_id: '', title: '', description: '' });
       setIsProjectModalOpen(false);
       fetchData();
@@ -228,6 +238,7 @@ const DashboardPage = () => {
               <ProjectTable
                 projects={projects}
                 onNewProjectClick={() => setIsProjectModalOpen(true)}
+                onDeleteProject={handleDeleteProject}
               />
             </div>
           </>

@@ -1,9 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Folder, ArrowRight, Clock, DollarSign, CheckCircle2 } from 'lucide-react';
+import { Folder, ArrowRight, Clock, DollarSign, CheckCircle2, Trash2 } from 'lucide-react';
+import ConfirmationDialog from '../common/ConfirmationDialog';
 
-const ProjectTable = ({ projects = [], onNewProjectClick }) => {
+const ProjectTable = ({ projects = [], onNewProjectClick, onDeleteProject }) => {
   const navigate = useNavigate();
+  const [projectToDelete, setProjectToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  const closeDeleteDialog = () => {
+    if (isDeleting) return;
+    setProjectToDelete(null);
+    setDeleteError('');
+  };
+
+  const confirmDeleteProject = async () => {
+    if (!projectToDelete || !onDeleteProject) return;
+
+    try {
+      setIsDeleting(true);
+      setDeleteError('');
+      await onDeleteProject(projectToDelete.id);
+      setProjectToDelete(null);
+    } catch (error) {
+      setDeleteError(
+        error.response?.data?.message || 'Failed to delete the project. Please try again.',
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const getStatusBadge = (status) => {
     const normalized = (status || 'active').toLowerCase();
@@ -107,11 +134,15 @@ const ProjectTable = ({ projects = [], onNewProjectClick }) => {
 
                   <td className="py-4 px-6">
                     <span className="font-medium text-slate-700">
-                      {project.client_name || project.client?.name || 'N/A'}
+                      {project.client_name || project.client?.name || "N/A"}
                     </span>
                     {(project.hourly_rate || project.client?.hourly_rate) && (
                       <span className="text-xs text-slate-400 block">
-                        ${Number(project.hourly_rate || project.client?.hourly_rate).toFixed(2)}/hr
+                        $
+                        {Number(
+                          project.hourly_rate || project.client?.hourly_rate,
+                        ).toFixed(2)}
+                        /hr
                       </span>
                     )}
                   </td>
@@ -130,29 +161,52 @@ const ProjectTable = ({ projects = [], onNewProjectClick }) => {
                   <td className="py-4 px-6 text-right">
                     <span className="font-semibold text-emerald-600 inline-flex items-center gap-0.5">
                       <DollarSign className="w-3.5 h-3.5" />
-                      {totalEarned.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {totalEarned.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </span>
                   </td>
 
                   <td className="py-4 px-6 text-center">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                      <span className="text-amber-600 font-semibold">{pendingTasks}</span>
+                      <span className="text-amber-600 font-semibold">
+                        {pendingTasks}
+                      </span>
                       <span>/</span>
                       <span>{totalTasks}</span>
                     </span>
                   </td>
 
                   <td className="py-4 px-6 text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/projects/${project.id}`);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
-                    >
-                      <span>View</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="inline-flex items-center justify-end gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/projects/${project.id}`);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <span>View</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                      {onDeleteProject && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteError("");
+                            setProjectToDelete(project);
+                          }}
+                          aria-label={`Delete ${project.title || project.name}`}
+                          title={`Delete ${project.title || project.name}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-2 py-1.5 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-100 hover:text-rose-700"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          {/* <span>Delete</span> */}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );
@@ -160,6 +214,30 @@ const ProjectTable = ({ projects = [], onNewProjectClick }) => {
           </tbody>
         </table>
       </div>
+      <ConfirmationDialog
+        isOpen={Boolean(projectToDelete)}
+        onClose={closeDeleteDialog}
+        onConfirm={confirmDeleteProject}
+        title="Delete project?"
+        message={
+          <>
+            {deleteError && (
+              <p role="alert" className="mb-3 rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-700">
+                {deleteError}
+              </p>
+            )}
+            <p>
+              Are you sure you want to delete{' '}
+              <strong className="font-semibold text-slate-800">
+                {projectToDelete?.title || projectToDelete?.name || 'this project'}
+              </strong>
+              ? This action cannot be undone.
+            </p>
+          </>
+        }
+        confirmText="Delete project"
+        isConfirming={isDeleting}
+      />
     </div>
   );
 };

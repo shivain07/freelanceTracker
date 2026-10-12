@@ -48,21 +48,23 @@ The frontend communicates with the Freelancer Tracker backend service configured
 http://localhost:3001
 ```
 
-- **Authentication**: Managed via session cookies and Google OAuth (`http://localhost:3001/auth/google`).
+- **Authentication**: Managed via session cookies and Google OAuth (`POST /api/auth/google`, `POST /api/auth/logout`, and `GET /api/auth/verify`).
+- **API routes**: Request URLs are centralized in `src/api/apiRoutes.js`.
 - **Axios Configuration**: Pre-configured in `src/api/axiosClient.js` with `withCredentials: true`. Successful responses (including `200` and `201`) return their response body unchanged. API errors are surfaced through app-wide notifications; expired sessions clear the signed-in user and redirect to sign-in, while login `401`s, validation errors, permission errors, missing resources, Google outages, server failures, and network failures receive distinct guidance.
 - **Not Found handling**: Unknown browser URLs show a branded `404` page. An API `404` remains on the current page and displays a resource-not-found notification; it does not prompt the user to sign in again.
 - **Backend Endpoints**:
-  - `GET /auth/status`: Checks session authentication
-  - `GET /auth/google`: Initiates Google OAuth login
-  - `GET /auth/logout`: Destroys user session
+  - `POST /api/auth/google`: Verifies Google credentials and starts a session
+  - `POST /api/auth/logout`: Destroys the user session
+  - `GET /api/auth/verify`: Checks session authentication
   - `GET /api/projects`: Fetches user projects list
   - `POST /api/projects`: Creates a new project
-  - `GET /api/projects/:id/tasks`: Fetches hierarchical tasks for a project
+  - `GET /api/projects/:projectId/tasks`: Fetches hierarchical tasks for a project
   - `POST /api/clients`: Creates a new client
   - `GET /api/clients`: Fetches client list
-  - `POST /api/tasks`: Creates a task or subtask (`parent_id`)
-  - `PATCH /api/tasks/:id`: Updates task completion status
-  - `POST /api/tasks/:id/time-logs`: Logs work duration (hours) against a task
+  - `POST /api/tasks`: Creates a task or subtask (`parent_task_id`)
+  - `PATCH /api/tasks/:taskId`: Updates task completion status
+  - `POST /api/time-logs`: Logs work duration (hours) against a task
+  - `GET /api/time-logs/task/:taskId`: Retrieves time logs for a task
 
 ---
 

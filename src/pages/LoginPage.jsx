@@ -10,7 +10,6 @@ import {
   BarChart3,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import LoginButton from "../components/auth/LoginButton";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import { GoogleLogin } from "@react-oauth/google";
 import api from "../api/axiosClient";
@@ -162,10 +161,10 @@ const LoginPage = () => {
                 <p className="text-sm text-slate-400 leading-relaxed">
                   {feature.description}
                 </p>
-                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-indigo-400 group cursor-default">
+                {/* <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-indigo-400 group cursor-default">
                   <span>Learn more</span>
                   <ChevronRight className="w-3.5 h-3.5" />
-                </div>
+                </div> */}
               </div>
             );
           })}

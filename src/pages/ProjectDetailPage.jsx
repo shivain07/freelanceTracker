@@ -17,6 +17,7 @@ import {
   Calendar,
   Layers,
 } from 'lucide-react';
+import API_ROUTES from '../api/apiRoutes';
 
 const ProjectDetailPage = () => {
   const { projectId } = useParams();
@@ -43,7 +44,7 @@ const ProjectDetailPage = () => {
     try {
       setLoading(true);
       setError('');
-      const tasksRes = await api.get(`/api/projects/${projectId}/tasks`);
+      const tasksRes = await api.get(API_ROUTES.project.getProject(projectId));
 
       let taskList = [];
       let projectInfo = null;
@@ -62,7 +63,7 @@ const ProjectDetailPage = () => {
       // Fetch project info from dashboard endpoint
       if (!projectInfo) {
         try {
-          const allProjectsRes = await api.get('/api/projects');
+          const allProjectsRes = await api.get(API_ROUTES.project.getAllProjects);
           const all = Array.isArray(allProjectsRes.data)
             ? allProjectsRes.data
             : allProjectsRes.data.data || allProjectsRes.data.projects || [];
@@ -97,7 +98,7 @@ const ProjectDetailPage = () => {
     try {
       setTaskSubmitting(true);
       setTaskError('');
-      await api.post('/api/tasks', {
+      await api.post(API_ROUTES.task.createTask, {
         title: newTaskTitle.trim(),
         project_id: projectId,
         parent_task_id: null,
@@ -127,7 +128,7 @@ const ProjectDetailPage = () => {
     try {
       setTimeLogSubmitting(true);
       setTimeLogError('');
-      await api.post(`/api/time-logs`, {
+      await api.post(API_ROUTES.timelog.newTime, {
         task_id: selectedTaskForLog,
         hours: parsedHours,
         description: timeLogDescription.trim(),

@@ -7,20 +7,35 @@ export const API_ROUTES = {
   },
   auth: {
     google: `${API_BASE}/auth/google`,
-    logout:`${API_BASE}/auth/logout`
+    logout: `${API_BASE}/auth/logout`,
+    verify: `${API_BASE}/auth/verify`,
   },
-  users: {
-    getProfile: (userId) => `${API_BASE}/users/${encodeURIComponent(userId)}/profile`,
-    getFeed: (userId, limit = 10) =>
-      `${API_BASE}/users/${encodeURIComponent(userId)}/feed?${new URLSearchParams({
-        limit: String(limit),
-      })}`,
+  client: {
+    getAllClients: `${API_BASE}/clients`,
+    addClient: `${API_BASE}/clients`,
+    deleteClient: (clientId)=> `${API_BASE}/clients/${encodeURIComponent(clientId)}`,
   },
-  posts: {
-    public: (limit = 10) =>
-      `${API_BASE}/posts?${new URLSearchParams({
-        limit: String(limit),
-      })}`,
+  project: {
+    getAllProjects: `${API_BASE}/projects`,
+    addProject: `${API_BASE}/projects`,
+    getProject: (projectId) =>
+      `${API_BASE}/projects/${encodeURIComponent(projectId)}/tasks`,
+    deleteProject: (projectId) =>
+      `${API_BASE}/projects/${encodeURIComponent(projectId)}`,
+  },
+  task: {
+    getTasks: (projectId) =>
+      `${API_BASE}/tasks/project/${encodeURIComponent(projectId)}`,
+    createTask: `${API_BASE}/tasks`,
+    patchTask: (taskId) =>
+      `${API_BASE}/tasks/${encodeURIComponent(taskId)}`,
+    deleteTask: (taskId) =>
+      `${API_BASE}/tasks/${encodeURIComponent(taskId)}`,
+  },
+  timelog: {
+    newTime: `${API_BASE}/time-logs`,
+    getTime: (taskId) =>
+      `${API_BASE}/time-logs/task/${encodeURIComponent(taskId)}`,
   },
 };
 

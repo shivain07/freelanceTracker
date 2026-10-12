@@ -1,10 +1,6 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-} from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import api from "../api/axiosClient";
+import API_ROUTES from "../api/apiRoutes";
 
 const AuthContext = createContext(null);
 
@@ -13,7 +9,23 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
 
+  useEffect(() => {
+    checkUserSession();
+  }, []);
+
+  const checkUserSession = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get(API_ROUTES.auth.verify);
+      verifyUser(res || null);
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const verifyUser = useCallback((userData) => {
+    console.log(userData)
     if (userData?.user?.id) {
       // userData = {
       //   success: true,
