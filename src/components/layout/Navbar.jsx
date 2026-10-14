@@ -11,6 +11,7 @@ import {
 import api from "../../api/axiosClient";
 import { useAuth } from "../../context/AuthContext";
 import API_ROUTES from "../../api/apiRoutes";
+import { clearToken, hasStoredToken } from "../../utils/secureToken";
 
 const UserAvatar = ({ avatarUrl, alt, imageClassName, fallbackClassName }) => {
   const [failedUrl, setFailedUrl] = useState(null);
@@ -36,17 +37,19 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
+    const hadBearer = hasStoredToken();
     try {
-      // 1. Tell backend to clear the HttpOnly cookie
       await api.post(API_ROUTES.auth.logout, {}, { withCredentials: true });
-
-      // 2. Clear user state from React context / local storage
+      clearToken();
       verifyUser(null);
-
-      // 3. Redirect to login page
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error.response?.data || error.message);
+      if (hadBearer) {
+        clearToken();
+        verifyUser(null);
+        navigate("/");
+      }
     }
   };
 

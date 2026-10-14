@@ -1,0 +1,7 @@
+[build]
+  publish = "dist" # Change this to "build" if your framework uses build instead of dist
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

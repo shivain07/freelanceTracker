@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { notifyUser } from '../../utils/notifications';
+import { clearToken } from '../../utils/secureToken';
 
 const styles = {
   error: {
@@ -46,6 +47,7 @@ const NotificationProvider = ({ children }) => {
     };
 
     const handleAuthExpired = () => {
+      clearToken();
       verifyUser(null);
       navigate('/', { replace: true });
       notifyUser('Your session has expired. Please sign in again.');

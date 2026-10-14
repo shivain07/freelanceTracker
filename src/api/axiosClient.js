@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { notifyUser } from '../utils/notifications';
+import { clearToken, hasStoredToken, readToken } from '../utils/secureToken';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
@@ -8,16 +9,15 @@ const api = axios.create({
 });
 
 
-// Automatically add Authorization token to every outgoing request
-// api.interceptors.request.use((config) => {
-//   const token = localStorage.getItem('token');
-//   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`;
-//   }
-//   return config;
-// }, (error) => {
-//   return Promise.reject(error);
-// });
+api.interceptors.request.use(async (config) => {
+  if (!hasStoredToken()) return config;
+
+  const token = await readToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 
 const getErrorMessage = (error) => {
@@ -60,6 +60,8 @@ api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
+      if (hasStoredToken()) clearToken();
+
       if (error.config?.suppressAuthError) {
         // An anonymous session check is expected to return 401.
       } else if (!error.config?.skipAuthRedirect) {
